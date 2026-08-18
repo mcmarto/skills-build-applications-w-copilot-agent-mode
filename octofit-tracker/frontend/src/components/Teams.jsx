@@ -1,5 +1,25 @@
 import { useEffect, useState } from 'react';
-import { fetchCollection } from '../utils/api';
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const teamsApiUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api/teams`
+  : 'http://localhost:8000/api/teams';
+
+const normalizeCollection = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+
+  return [];
+};
 
 export default function Teams() {
   const [teams, setTeams] = useState([]);
@@ -11,7 +31,14 @@ export default function Teams() {
 
     async function loadTeams() {
       try {
-        const data = await fetchCollection('teams');
+        const response = await fetch(teamsApiUrl);
+
+        if (!response.ok) {
+          throw new Error(`Request failed for teams: ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const data = normalizeCollection(payload);
 
         if (!isMounted) {
           return;

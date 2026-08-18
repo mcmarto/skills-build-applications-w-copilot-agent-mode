@@ -1,5 +1,25 @@
 import { useEffect, useState } from 'react';
-import { fetchCollection } from '../utils/api';
+
+const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
+const workoutsApiUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev/api/workouts`
+  : 'http://localhost:8000/api/workouts';
+
+const normalizeCollection = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+
+  return [];
+};
 
 export default function Workouts() {
   const [workouts, setWorkouts] = useState([]);
@@ -11,7 +31,14 @@ export default function Workouts() {
 
     async function loadWorkouts() {
       try {
-        const data = await fetchCollection('workouts');
+        const response = await fetch(workoutsApiUrl);
+
+        if (!response.ok) {
+          throw new Error(`Request failed for workouts: ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const data = normalizeCollection(payload);
 
         if (!isMounted) {
           return;
