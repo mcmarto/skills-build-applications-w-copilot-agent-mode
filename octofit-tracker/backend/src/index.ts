@@ -1,4 +1,5 @@
 import express, { Express, Request, Response } from 'express';
+import cors from 'cors';
 import db, { connectToDatabase } from './config/database';
 import { User, Team, Activity, LeaderboardEntry, Workout } from './models';
 
@@ -14,6 +15,10 @@ const readResource = async <T>(loader: () => Promise<T[]>, res: Response) => {
   res.json({ success: true, count: items.length, data: items, apiBaseUrl });
 };
 
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
